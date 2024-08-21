@@ -69,7 +69,7 @@ module SorbetRails
     end
 
     sig {
-      params(signature: T::Private::Methods::Signature).
+      params(signature: ::T::Private::Methods::Signature).
       returns(T::Array[ParsedParamDef])
     }
     def self.get_ordered_parameters_with_type(signature)
