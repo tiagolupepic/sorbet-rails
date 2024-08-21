@@ -78,6 +78,27 @@ RSpec.describe SorbetRails::PluckToTStruct do
     const :parent_email, T.nilable(String), default: "hagrid@hogwarts.com"
   end
 
+  class WizardWithHouseType < T::Struct
+    include TStructComparable
+
+    const :name, String
+    const :house, Wizard::House
+  end
+
+  class WizardWithNilableHouseType < T::Struct
+    include TStructComparable
+
+    const :name, String
+    const :house, T.nilable(Wizard::House)
+  end
+
+  class WizardWithNilableAndDefaultHouseType < T::Struct
+    include TStructComparable
+
+    const :name, String
+    const :house, T.nilable(Wizard::House), default: Wizard::House::Gryffindor
+  end
+
   shared_examples 'pluck_to_tstruct' do |struct_type, expected_values|
     it 'plucks correctly from ActiveRecord model' do
       plucked = Wizard.pluck_to_tstruct(TA[struct_type].new)
@@ -106,6 +127,41 @@ RSpec.describe SorbetRails::PluckToTStruct do
     it_should_behave_like 'pluck_to_tstruct', WizardName, [
       WizardName.new(name: "Harry Potter"),
       WizardName.new(name: "Hermione Granger"),
+    ]
+  end
+
+  context 'pluck with house typed enum' do
+    it_should_behave_like 'pluck_to_tstruct', WizardWithHouseType, [
+      WizardWithHouseType.new(name: "Harry Potter", house: Wizard::House::Gryffindor),
+      WizardWithHouseType.new(name: "Hermione Granger", house: Wizard::House::Gryffindor),
+    ]
+  end
+
+  context 'pluck with nilable house typed enum' do
+    let!(:hermione) do
+      Wizard.create!(
+        name: 'Hermione Granger',
+        house: nil
+      )
+    end
+
+    it_should_behave_like 'pluck_to_tstruct', WizardWithNilableHouseType, [
+      WizardWithNilableHouseType.new(name: "Harry Potter", house: Wizard::House::Gryffindor),
+      WizardWithNilableHouseType.new(name: "Hermione Granger", house: nil),
+    ]
+  end
+
+  context 'pluck with nilable house and default typed enum' do
+    let!(:hermione) do
+      Wizard.create!(
+        name: 'Hermione Granger',
+        house: nil
+      )
+    end
+
+    it_should_behave_like 'pluck_to_tstruct', WizardWithNilableAndDefaultHouseType, [
+      WizardWithNilableAndDefaultHouseType.new(name: "Harry Potter", house: Wizard::House::Gryffindor),
+      WizardWithNilableAndDefaultHouseType.new(name: "Hermione Granger", house: Wizard::House::Gryffindor),
     ]
   end
 
